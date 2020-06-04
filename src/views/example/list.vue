@@ -57,8 +57,8 @@
 </template>
 
 <script>
-import { fetchList } from '@/api/article'
-import Pagination from '@/components/Pagination' // Secondary package based on el-pagination
+import { listUser } from '@/api/sys/user'
+import Pagination from '@/components/Pagination'
 
 export default {
   name: 'ArticleList',
@@ -90,12 +90,16 @@ export default {
   methods: {
     getList() {
       this.listLoading = true
-      fetchList(this.listQuery).then(response => {
-        this.list = response.data.items
+      listUser(this.listQuery).then(response => {
+        this.list = response.data.list
         this.total = response.data.total
         this.listLoading = false
       })
-    }
+    },
+    handleFilter() {
+      this.listQuery.page = 1;
+      this.getList();
+    },
   }
 }
 </script>

@@ -16,18 +16,8 @@ export function login(data) {
   })
 }
 
-export function getInfo() {
-  return request({
-    url: '/user/info',
-    method: 'get'
-  })
-}
+export const logout = () => request.get("/logout");
 
-export const getUserInfo = () => request.get("/user/info");
+export const getUserInfo = () => request.get("/current/profile");
 
-export function logout() {
-  return request({
-    url: '/vue-element-admin/user/logout',
-    method: 'post'
-  })
-}
+export const getRouters = () => request.get("/current/menu")
