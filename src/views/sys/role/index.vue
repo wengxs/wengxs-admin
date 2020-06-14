@@ -11,7 +11,7 @@
     </el-form>
 
     <el-button-group class="btn-container">
-      <el-button type="primary" size="mini" icon="el-icon-edit" @click="handleAdd"
+      <el-button type="primary" size="mini" icon="el-icon-plus" @click="handleAdd"
                  v-permission="['sys:role:add']">添加</el-button>
       <el-button type="success" size="mini" icon="el-icon-edit" @click="handleEdit"
                  v-permission="['sys:role:edit']" :disabled="ids.length !== 1">修改</el-button>
@@ -27,7 +27,7 @@
       <el-table-column label="创建时间" prop="createTime" align="center" width="140"/>
       <el-table-column label="操作" align="center" width="100" fixed="right">
         <template slot-scope="{ row }">
-          <el-button type="text" size="mini" icon="el-icon-edit" @click="handleEdit(row)"
+          <el-button type="text" size="mini" @click="handleEdit(row)"
                      v-permission="['sys:role:edit']">修改</el-button>
         </template>
       </el-table-column>

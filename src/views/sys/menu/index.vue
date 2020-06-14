@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <el-button-group class="btn-container">
-      <el-button type="primary" size="mini" icon="el-icon-edit" @click="handleAdd"
+      <el-button type="primary" size="mini" icon="el-icon-plus" @click="handleAdd"
                  v-permission="['sys:menu:add']">添加</el-button>
     </el-button-group>
     <el-table v-loading="listLoading" :data="list" row-key="id" :tree-props="{children: 'children'}"
@@ -19,11 +19,11 @@
       <el-table-column label="创建时间" prop="createTime" align="center" width="160"/>
       <el-table-column label="操作" align="center" width="200" fixed="right">
         <template slot-scope="{ row }">
-          <el-button type="text" size="mini" icon="el-icon-edit" @click="handleEdit(row)"
+          <el-button type="text" size="mini" @click="handleEdit(row)"
                      v-permission="['sys:menu:edit']">修改</el-button>
-          <el-button type="text" size="mini" icon="el-icon-edit" @click="handleAdd(row)"
-                     v-permission="['sys:menu:add']">新增</el-button>
-          <el-button type="text" size="mini" icon="el-icon-edit" @click="handleDel(row)"
+          <el-button type="text" size="mini" @click="handleAdd(row)"
+                     v-permission="['sys:menu:add']" v-if="row.type===1">新增</el-button>
+          <el-button type="text" size="mini" @click="handleDel(row)"
                      v-permission="['sys:menu:del']">删除</el-button>
         </template>
       </el-table-column>

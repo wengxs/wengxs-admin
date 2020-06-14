@@ -1,5 +1,5 @@
 import axios from 'axios'
-import QS from 'qs'
+// import QS from 'qs'
 import { MessageBox, Message } from 'element-ui'
 import store from '@/store'
 import { getToken } from '@/utils/auth'
@@ -9,14 +9,14 @@ const service = axios.create({
   baseURL: process.env.VUE_APP_BASE_API, // url = base url + request url
   // withCredentials: true, // send cookies when cross-domain requests
   timeout: 5000, // request timeout
-  transformRequest: [function (data) {
+  /*transformRequest: [function (data) {
     // 对 data 进行任意转换处理
     data = data instanceof FormData ? data : QS.stringify(data, { indices: false });
     return data
   }],
   paramsSerializer: function(params) {
     return QS.stringify(params, { indices: false })
-  },
+  },*/
 })
 
 // request interceptor
