@@ -175,10 +175,23 @@ aside {
   padding-bottom: 10px;
 
   .filter-item {
-    display: inline-block;
+    //display: inline-block;
     vertical-align: middle;
-    margin-bottom: 10px;
+    //margin-bottom: 10px;
+    width: 180px;
   }
+
+  //.filter-item:not(button) {
+  //  width: 200px;
+  //}
+}
+
+.btn-container {
+  margin-bottom: 10px;
+}
+
+.el-table th {
+  background-color: #F9F9F9;
 }
 
 //refine vue-multiselect plugin

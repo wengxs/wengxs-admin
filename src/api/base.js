@@ -21,3 +21,5 @@ export const logout = () => request.get("/logout");
 export const getUserInfo = () => request.get("/current/profile");
 
 export const getRouters = () => request.get("/current/menu")
+
+export const changePassword = data => request.put('/current/updatePassword', data);

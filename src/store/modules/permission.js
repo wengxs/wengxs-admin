@@ -1,4 +1,4 @@
-import { asyncRoutes, constantRoutes } from '@/router'
+import { constantRoutes } from '@/router'
 import { getRouters } from '@/api/base'
 import Layout from '@/layout/index'
 
@@ -15,13 +15,13 @@ import Layout from '@/layout/index'
 //   }
 // }
 
-function hasPermission(permissions, route) {
-  if (route.meta && route.meta.auth) {
-    return permissions.some(permission => route.meta.auth.includes(permission))
-  } else {
-    return true
-  }
-}
+// function hasPermission(permissions, route) {
+//   if (route.meta && route.meta.auth) {
+//     return permissions.some(permission => route.meta.auth.includes(permission))
+//   } else {
+//     return true
+//   }
+// }
 
 
 /**
@@ -30,49 +30,20 @@ function hasPermission(permissions, route) {
  * @param permissions
  */
 export function filterAsyncRoutes(routes) {
-  // return routes.filter(route => {
-  //   if (route.component) {
-  //     // Layout组件特殊处理
-  //     if (route.component === 'Layout') {
-  //       route.component = Layout
-  //     } else {
-  //       route.component = loadView(route.component)
-  //     }
-  //   }
-  //   if (route.children != null && route.children && route.children.length) {
-  //     route.children = filterAsyncRoutes(route.children)
-  //   }
-  //   const meta = {};
-  //   meta.title = route.title;
-  //   meta.icon = route.icon;
-  //   route.meta = meta;
-  //   return true
-  // })
   const res = []
   routes.forEach(route => {
-    // const tmp = { ...route }
-    const tmp = {}
-    const meta = {};
-    meta.title = route.title;
-    meta.icon = route.icon;
-    if (route.path) {
-      tmp.path = route.path;
-    } else {
-      tmp.path = "/404";
-    }
-
+    const tmp = { ...route }
     if (route.component) {
       tmp.component = loadView(route.component);
     } else {
       tmp.component = Layout;
     }
-    tmp.meta = meta;
     if (route.children) {
       tmp.children = filterAsyncRoutes(route.children)
     }
     res.push(tmp)
   })
-  return res
+  return res;
 }
 
 export const loadView = (view) => { // 路由懒加载
@@ -96,9 +67,6 @@ const actions = {
     return new Promise(resolve => {
       getRouters().then(res => {
         let accessedRoutes = filterAsyncRoutes(res.data)
-        let accessedRoutes2 = asyncRoutes;
-        console.log(accessedRoutes);
-        console.log(accessedRoutes2);
         accessedRoutes.push({ path: '*', redirect: '/404', hidden: true })
         commit('SET_ROUTES', accessedRoutes)
         resolve(accessedRoutes)

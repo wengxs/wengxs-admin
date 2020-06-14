@@ -12,36 +12,54 @@
 
         <screenfull id="screenfull" class="right-menu-item hover-effect" />
 
-        <el-tooltip content="Global Size" effect="dark" placement="bottom">
+        <!--<el-tooltip content="Global Size" effect="dark" placement="bottom">
           <size-select id="size-select" class="right-menu-item hover-effect" />
-        </el-tooltip>
+        </el-tooltip>-->
 
       </template>
 
-      <el-dropdown class="avatar-container right-menu-item hover-effect" trigger="click">
-        <div class="avatar-wrapper">
-          <img :src="avatar+'?imageView2/1/w/80/h/80'" class="user-avatar">
+      <el-dropdown class="right-menu-item hover-effect" trigger="click">
+        <div>
+          {{ username }}
           <i class="el-icon-caret-bottom" />
         </div>
         <el-dropdown-menu slot="dropdown">
-          <router-link to="/profile/index">
-            <el-dropdown-item>Profile</el-dropdown-item>
-          </router-link>
-          <router-link to="/">
-            <el-dropdown-item>Dashboard</el-dropdown-item>
-          </router-link>
-          <a target="_blank" href="https://github.com/PanJiaChen/vue-element-admin/">
-            <el-dropdown-item>Github</el-dropdown-item>
-          </a>
-          <a target="_blank" href="https://panjiachen.github.io/vue-element-admin-site/#/">
-            <el-dropdown-item>Docs</el-dropdown-item>
-          </a>
+          <!--<router-link to="/profile/index">
+            <el-dropdown-item>个人中心</el-dropdown-item>
+          </router-link>-->
+          <el-dropdown-item @click.native="openChangePassword = true">
+            <span>修改密码</span>
+          </el-dropdown-item>
+          <el-dropdown-item @click.native="setting = true">
+            <span>布局设置</span>
+          </el-dropdown-item>
           <el-dropdown-item divided @click.native="logout">
-            <span style="display:block;">Log Out</span>
+            <span>退出登录</span>
           </el-dropdown-item>
         </el-dropdown-menu>
       </el-dropdown>
     </div>
+
+    <el-dialog title="修改密码" :visible.sync="openChangePassword" @close="resetForm('editForm')"
+               :modal-append-to-body="false" :close-on-click-modal="false">
+      <div class="dialog-content">
+        <el-form :model="changePasswordForm" status-icon :rules="changePasswordRules" ref="editForm" label-width="80px">
+          <el-form-item label="当前密码" prop="oldPassword">
+            <el-input type="password" v-model="changePasswordForm.oldPassword" autocomplete="off"></el-input>
+          </el-form-item>
+          <el-form-item label="新的密码" prop="newPassword">
+            <el-input type="password" v-model="changePasswordForm.newPassword" autocomplete="off"></el-input>
+          </el-form-item>
+          <el-form-item label="确认密码" prop="rePassword">
+            <el-input type="password" v-model="changePasswordForm.rePassword" autocomplete="off"></el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="submitChangePassword">提交</el-button>
+            <el-button @click="openChangePassword = false">取消</el-button>
+          </el-form-item>
+        </el-form>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -51,8 +69,9 @@ import Breadcrumb from '@/components/Breadcrumb'
 import Hamburger from '@/components/Hamburger'
 import ErrorLog from '@/components/ErrorLog'
 import Screenfull from '@/components/Screenfull'
-import SizeSelect from '@/components/SizeSelect'
+// import SizeSelect from '@/components/SizeSelect'
 import Search from '@/components/HeaderSearch'
+import { changePassword } from '@/api/base'
 
 export default {
   components: {
@@ -60,23 +79,79 @@ export default {
     Hamburger,
     ErrorLog,
     Screenfull,
-    SizeSelect,
+    // SizeSelect,
     Search
+  },
+  data() {
+    return {
+      openChangePassword: false,
+      changePasswordForm: {
+        oldPassword: undefined,
+        newPassword: undefined,
+        rePassword: undefined,
+      },
+      changePasswordRules: {
+        oldPassword: [
+          { required: true, message: '请输入当前密码', trigger: 'blur' },
+        ],
+        newPassword: [
+          { required: true, message: '请输入新的密码', trigger: 'blur' },
+          { min: 6, message: '密码长度不能少于6个字符', trigger: 'blur' }
+        ],
+        rePassword: [
+          { required: true,
+            validator: (rule, value, callback) => {
+              if (value !== this.changePasswordForm.newPassword){
+                return callback(new Error());
+              }
+              return callback();
+            },
+            message: '两次输入密码不一致',
+            trigger: 'blur'
+          }
+        ],
+      }
+    }
   },
   computed: {
     ...mapGetters([
       'sidebar',
       'avatar',
+      'username',
       'device'
-    ])
+    ]),
+    setting: {
+      get() {
+        return this.$store.state.settings.showSettings
+      },
+      set(val) {
+        this.$store.dispatch('settings/changeSetting', {
+          key: 'showSettings',
+          value: val
+        })
+      }
+    }
   },
   methods: {
     toggleSideBar() {
       this.$store.dispatch('app/toggleSideBar')
     },
-    async logout() {
-      await this.$store.dispatch('user/logout')
-      this.$router.push(`/login?redirect=${this.$route.fullPath}`)
+    logout() {
+      this.$confirm('确定注销并退出系统吗？', '提示').then(() => {
+        this.$store.dispatch('user/logout').then(() => {
+          this.$router.push(`/login?redirect=${this.$route.fullPath}`)
+        })
+      })
+    },
+    submitChangePassword() {
+      this.$refs['editForm'].validate((valid) => {
+        if (valid) {
+          changePassword(this.changePasswordForm).then(() => {
+            this.$message.success('修改成功');
+            this.openChangePassword = false;
+          })
+        }
+      });
     }
   }
 }

@@ -353,3 +353,13 @@ export function removeClass(ele, cls) {
     ele.className = ele.className.replace(reg, ' ')
   }
 }
+
+/**
+ * 重置表单
+ * @param formName
+ */
+export function resetForm(formName) {
+  if (this.$refs[formName]) {
+    this.$refs[formName].resetFields();
+  }
+}
