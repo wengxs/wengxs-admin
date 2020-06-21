@@ -11,3 +11,7 @@ export const updateTable = data => request.put('/gen/code', data);
 export const delTable = id => request.delete('/gen/code/' + id);
 
 export const previewCode = id => request.get('/gen/code/preview/' + id)
+
+export const listSchema = data => request.get('/gen/code/schemaList', {params: data})
+
+export const importSchema = tableName => request.post('/gen/code/importSchema/' + tableName);

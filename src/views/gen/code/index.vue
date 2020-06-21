@@ -12,13 +12,14 @@
 
     <el-button-group class="btn-container">
       <el-button type="primary" size="mini" icon="el-icon-plus" @click="handleAdd"
-                 v-permission="['sys:user:add']">添加</el-button>
+                 v-permission="['gen:code:add']">生成</el-button>
       <el-button type="success" size="mini" icon="el-icon-edit" @click="handleEdit"
-                 v-permission="['sys:user:edit']" :disabled="ids.length !== 1">修改</el-button>
+                 v-permission="['gen:code:edit']" :disabled="ids.length !== 1">修改</el-button>
       <el-button type="danger" size="mini" icon="el-icon-delete" @click="handleDel"
-                 v-permission="['sys:user:del']" :disabled="ids.length === 0">删除</el-button>
-      <!--<el-button type="info" size="mini" icon="el-icon-upload">导入</el-button>
-      <el-button type="warning" size="mini" icon="el-icon-download">导出</el-button>-->
+                 v-permission="['gen:code:del']" :disabled="ids.length === 0">删除</el-button>
+      <el-button type="info" size="mini" icon="el-icon-upload" @click="handleImport"
+                 v-permission="['gen:code:add']">导入</el-button>
+      <!--<el-button type="warning" size="mini" icon="el-icon-download">导出</el-button>-->
     </el-button-group>
 
     <el-table v-loading="listLoading" :data="list" @selection-change="handleSelectionChange"
@@ -53,133 +54,123 @@
         </el-tab-pane>
       </el-tabs>
     </el-dialog>
+    <import-schema ref="importSchema"/>
   </div>
 </template>
 
 <script>
-  import { listTable, getTable, addTable, updateTable, delTable, previewCode } from '@/api/gen/code'
-  import { allRole } from '@/api/sys/role'
+import { listTable, getTable, addTable, updateTable, delTable, previewCode } from '@/api/gen/code'
+import importSchema from "./component/importSchema";
 
-  export default {
-    name: "GenCode",
-    data() {
-      return {
-        ids:[],
-        total: 0,
-        list: [],
-        listLoading: true,
-        listQuery: {
-          page: 1,
-          pageSize: 10,
-          sortBy: "createTime",
-          sortDirection: "desc"
+export default {
+  name: "GenCode",
+  components: { importSchema },
+  data() {
+    return {
+      ids:[],
+      total: 0,
+      list: [],
+      listLoading: true,
+      listQuery: {
+        page: 1,
+        pageSize: 10,
+        sortBy: "createTime",
+        sortDirection: "desc"
+      },
+      roles: [],
+      previewDialog: {
+        show: false,
+        title: '预览',
+        activeName: 'entity.java',
+        data: {}
+      },
+      editDialog: {
+        show: false,
+        title: '修改用户',
+        data: {
+          id: undefined,
         },
-        roles: [],
-        previewDialog: {
-          show: false,
-          title: '预览',
-          activeName: 'entity.java',
-          data: {}
-        },
-        editDialog: {
-          show: false,
-          title: '修改用户',
-          data: {
-            id: undefined,
-            username: undefined,
-            password: undefined,
-            enabled: undefined,
-            roleIds: []
-          },
-          rules: {
-            password: [
-              { required: false, trigger: 'blur' },
-              { min: 6, message: '密码长度不能少于6个字符', trigger: 'blur' }
-            ],
-            roleIds: [
-              { type: 'array', required: true, message: '至少选择一个角色', trigger: 'change' }
-            ]
-          }
+        rules: {
+          password: [
+            { required: false, trigger: 'blur' },
+            { min: 6, message: '密码长度不能少于6个字符', trigger: 'blur' }
+          ],
+          roleIds: [
+            { type: 'array', required: true, message: '至少选择一个角色', trigger: 'change' }
+          ]
         }
       }
+    }
+  },
+  created() {
+    this.getList()
+  },
+  methods: {
+    getList() {
+      this.listLoading = true
+      listTable(this.listQuery).then(res => {
+        this.list = res.list
+        this.total = res.total
+        this.listLoading = false
+      })
     },
-    created() {
-      this.getList()
+    handleQuery() {
+      this.listQuery.page = 1;
+      this.getList();
     },
-    methods: {
-      getList() {
-        this.listLoading = true
-        listTable(this.listQuery).then(res => {
-          this.list = res.list
-          this.total = res.total
-          this.listLoading = false
-        })
-      },
-      handleQuery() {
-        this.listQuery.page = 1;
-        this.getList();
-      },
-      handleAdd() {
-        allRole().then(res => {
-          this.roles = res.data;
+    handleAdd() {
+      this.addDialog.show = true;
+    },
+    handleEdit(row) {
+      const id = row.id || this.ids
+      getTable(id).then(res => {
+        this.editDialog.data = res.data;
+        this.editDialog.show = true;
+      })
+    },
+    handleDel(row) {
+      const id = row.id || this.ids;
+      this.$confirm('是否确认删除?', '删除').then(() => {
+        delTable(id).then(() => {
+          this.$message.success('操作成功');
+          this.getList();
         });
-        this.addDialog.show = true;
-      },
-      handleEdit(row) {
-        const id = row.id || this.ids
-        getTable(id).then(res => {
-          const user = res.data;
-          this.editDialog.data.id = id;
-          this.editDialog.data.username = user.username;
-          this.editDialog.data.enabled = user.enabled;
-          this.editDialog.data.roleIds = user.roles.map(role => role.id);
-          console.log(this.editDialog.data.roleIds)
-          this.editDialog.show = true;
-        })
-        allRole().then(res => {
-          this.roles = res.data;
-        })
-      },
-      handleDel(row) {
-        const id = row.id || this.ids;
-        this.$confirm('是否确认删除?', '删除').then(() => {
-          delTable(id).then(() => {
-            this.$message.success('操作成功');
+      });
+    },
+    handleSelectionChange(selection) {
+      this.ids = selection.map(item => item.id);
+    },
+    submitSave() {
+      this.$refs['addForm'].validate((valid) => {
+        if (valid) {
+          addTable(this.addDialog.data).then(() => {
+            this.$message.success('添加成功');
+            this.addDialog.show = false;
             this.getList();
-          });
-        });
-      },
-      handleSelectionChange(selection) {
-        this.ids = selection.map(item => item.id);
-      },
-      submitSave() {
-        this.$refs['addForm'].validate((valid) => {
-          if (valid) {
-            addTable(this.addDialog.data).then(() => {
-              this.$message.success('添加成功');
-              this.addDialog.show = false;
-              this.getList();
-            })
-          }
-        });
-      },
-      submitEdit() {
-        this.$refs['editForm'].validate((valid) => {
-          if (valid) {
-            updateTable(this.editDialog.data).then(() => {
-              this.$message.success('修改成功');
-              this.editDialog.show = false;
-              this.getList()
-            })
-          }
-        });
-      },
-      preview(row) {
-        previewCode(row.id).then(res => {
-          this.previewDialog.data = res.data;
-          this.previewDialog.show = true;
-        })
-      }
+          })
+        }
+      });
+    },
+    submitEdit() {
+      this.$refs['editForm'].validate((valid) => {
+        if (valid) {
+          updateTable(this.editDialog.data).then(() => {
+            this.$message.success('修改成功');
+            this.editDialog.show = false;
+            this.getList()
+          })
+        }
+      });
+    },
+    preview(row) {
+      previewCode(row.id).then(res => {
+        this.previewDialog.data = res.data;
+        this.previewDialog.show = true;
+      })
+    },
+    handleImport() {
+      this.$refs.importSchema.show();
     }
   }
+}
 </script>
